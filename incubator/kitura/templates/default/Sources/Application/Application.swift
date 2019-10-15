@@ -1,33 +1,27 @@
-import Foundation
-import Kitura
+import AppsodyKitura
 import Configuration
+import Kitura
 
 public let projectPath = ConfigurationManager.BasePath.project.path
 
 public class App {
-    let router = Router()
-    let port: Int
+    let router: Router
+    let manager: ConfigurationManager
 
     public init() {
-        // Load configuration
-        let manager = ConfigurationManager()
-        manager.load(.environmentVariables)
+        self.router = AppsodyKitura.createRouter()
+        self.manager = AppsodyKitura.manager
+    }
 
-        // Configure port
-        self.port = Int(manager["PORT"] as? String ?? "8080") ?? 8080
-
-        // Configure logging
-        initializeLogging(value: manager["LOG_LEVEL"] as? String)
-
-        // Run the metrics initializer
-        initializeMetrics(router: router)
-
-        // Add health monitoring endpoint
-        initializeHealthRoutes(router: router)
+    public func setUpRoutes() {
+        router.get("/hello") { request, response, next in
+            response.send("Hello, World!")
+            next()
+        }
     }
 
     public func run() {
-        Kitura.addHTTPServer(onPort: port, with: router)
-        Kitura.run(exitOnFailure: true)
+        AppsodyKitura.run(self.router)
     }
+
 }

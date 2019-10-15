@@ -23,8 +23,7 @@ RUN apt-get update \
  && echo 'Finished installing dependencies'
 
 WORKDIR "/project"
-COPY --from=builder /project/user-app/.build /project/.build
-COPY --from=builder /project/user-app/run.sh /project
+COPY --from=builder /project/user-app /project
 
 ENV PORT 8080
 EXPOSE 8080

@@ -2,9 +2,8 @@ import Foundation
 import Kitura
 import KituraNet
 import XCTest
-import AppsodyKitura
 
-@testable import Application
+@testable import AppsodyKitura
 
 class RouteTests: XCTestCase {
     static var allTests : [(String, (RouteTests) -> () throws -> Void)] {
@@ -19,7 +18,7 @@ class RouteTests: XCTestCase {
     /// Starts the Kitura server using the App's port and router
     override func setUp() {
         super.setUp()
-        let server = Kitura.addHTTPServer(onPort: AppsodyKitura.port, with: app.router)
+        let server = Kitura.addHTTPServer(onPort: app.port, with: app.router)
         let startedExpectation = expectation(description: "Server started")
         server.started {
             startedExpectation.fulfill()
@@ -39,7 +38,7 @@ class RouteTests: XCTestCase {
     func testGetWelcomePage() {
         let responseExpectation = expectation(description: "The / route will serve static HTML content.")
 
-        URLRequest(forTestWithMethod: "GET", port: AppsodyKitura.port, route: "/")?
+        URLRequest(forTestWithMethod: "GET", port: app.port, route: "/")?
             .responseFromKitura { responseString, statusCode in
                 XCTAssertEqual(statusCode, .OK)
                 guard let responseString = responseString else {
@@ -58,7 +57,7 @@ class RouteTests: XCTestCase {
     func testHealthRoute() {
         let responseExpectation = expectation(description: "The /health route responds with UP, followed by a timestamp.")
         
-        URLRequest(forTestWithMethod: "GET", port: AppsodyKitura.port, route: "/health")?
+        URLRequest(forTestWithMethod: "GET", port: app.port, route: "/health")?
             .responseFromKitura { responseString, statusCode in
                 XCTAssertEqual(statusCode, .OK)
                 guard let responseString = responseString else {
@@ -105,25 +104,22 @@ private extension URLRequest {
     /// be empty.
     /// If a non-success status is returned, details of the response will also be printed.
     func responseFromKitura(completion: @escaping (String?, HTTPStatusCode) -> Void) {
-        guard let url = url else {
-            return XCTFail("URL is nil")
-        }
-        guard let method = httpMethod, let headers = allHTTPHeaderFields, let host = url.host, let port = url.port else {
-            return XCTFail("Invalid request params")
+        guard let method = httpMethod, var path = url?.path, let headers = allHTTPHeaderFields else {
+            XCTFail("Invalid request params")
+            return
         }
 
-        var path = url.path
-        if let query = url.query {
+        if let query = url?.query {
             path += "?" + query
         }
 
-        let requestOptions: [ClientRequest.Options] = [.method(method), .hostname(host), .port(Int16(bitPattern: UInt16(port))), .path(path), .headers(headers)]
+        let requestOptions: [ClientRequest.Options] = [.method(method), .hostname("localhost"), .port(8080), .path(path), .headers(headers)]
 
         // Create a ClientRequest. Completion will be called when the server
         // responds.
         let req = HTTP.request(requestOptions) { response in
             guard let response = response else {
-                return XCTFail("ClientResponse was nil for \(method) on \(host):\(port)/\(path)")
+                return XCTFail("ClientResponse was nil")
             }
             var body = Data()
             do {
