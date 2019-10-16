@@ -7,9 +7,12 @@ RUN apt-get update \
  && apt-get clean \
  && echo 'Finished installing dependencies'
 
-# Install user-app dependencies
+# Copy extracted project
+WORKDIR "/project"
+COPY . /project
+
+# Build project, and discover executable name
 WORKDIR "/project/user-app"
-COPY ./user-app ./
 RUN echo "#!/bin/bash" > run.sh \
  && swift build -c release | tee output.txt \
  && cat output.txt | awk 'END {print $NF}' >> run.sh \
@@ -22,10 +25,17 @@ RUN apt-get update \
  && apt-get clean \
  && echo 'Finished installing dependencies'
 
-WORKDIR "/project"
-COPY --from=builder /project/user-app /project
+# Define a kitura user
+RUN useradd -ms /bin/bash kitura
 
+# Copy built project
+COPY --chown=kitura:kitura --from=builder /project /project
+
+# Configure listening port
 ENV PORT 8080
 EXPOSE 8080
 
+# Run application as kitura user
+USER kitura
+WORKDIR "/project/user-app"
 CMD ["./run.sh"]
