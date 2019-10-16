@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "server",
     dependencies: [
-      .package(path: ".appsody/AppsodyKitura"),
+      .package(path: "deps/AppsodyKitura"),
     ],
     targets: [
       .target(name: "server", dependencies: [ .target(name: "Application") ]),
