@@ -11,6 +11,10 @@ RUN apt-get update \
 WORKDIR "/project"
 COPY . /project
 
+# Copy pristine dependencies
+RUN rm -rf /project/user-app/.appsody
+COPY --from=appsody/kitura /project/deps /project/user-app/.appsody
+
 # Build project, and discover executable name
 WORKDIR "/project/user-app"
 RUN echo "#!/bin/bash" > run.sh \
