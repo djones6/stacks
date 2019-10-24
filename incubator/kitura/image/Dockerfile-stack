@@ -1,4 +1,4 @@
-FROM appsody/swift:0.1
+FROM appsody/swift:0.2
 
 # Fix Python package layout before installing dependencies. This is a bug in the Swift
 # base image and this workaround should be removed once the base image is corrected.
