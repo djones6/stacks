@@ -1,8 +1,8 @@
 # Install the app dependencies in a full Node docker image
 FROM node:12
 
-# librdkafka builds against libssl-dev
-RUN apt-get update && apt-get install -y libssl-dev && apt-get clean
+# librdkafka builds against libssl-dev and libsasl2-dev
+RUN apt-get update && apt-get install -y libssl-dev libsasl2-dev && apt-get clean
 
 # Copying individual files/folders as buildah 1.9.0 does not honour .dockerignore
 COPY package*.json /project/
@@ -25,8 +25,8 @@ RUN cd / && tar czf project.tgz project
 # Copy the dependencies into a slim Node docker image
 FROM node:12-slim
 
-# librdkafka links against libssl
-RUN apt-get update && apt-get install -y libssl1.1 && apt-get clean
+# librdkafka links against libssl and libsasl2-2
+RUN apt-get update && apt-get install -y libssl1.1 libsasl2-2 && apt-get clean
 
 # Copy project with dependencies
 COPY --chown=node:node --from=0 /project.tgz /
